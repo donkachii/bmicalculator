@@ -1,46 +1,43 @@
 import "./App.css";
 import React, { useState, useRef } from "react";
 import { UserOutlined } from "@ant-design/icons";
-import { Avatar, Input, InputNumber, Radio, Button } from "antd";
-import ColorSlider from "./components/ColorSlider";
+import { Avatar, InputNumber, Radio, Button, Form } from "antd";
+import ReactSpeedometer from "react-d3-speedometer";
+import ColorMeasures from "./components/ColorMeasures";
 
 function App() {
-  const [bmiValue, setBmiValue] = useState({
-    gender: "male",
-    unit: "metric",
-    name: "",
-    age: null,
-    height: null,
-    weight: null,
-  });
+  const [selectedUnit, setSelectedUnit] = useState("metric");
   const [bmi, setBmi] = useState(null);
   const [bmiCategory, setBmiCategory] = useState(null);
   const [bmiDisplay, setBmiDisplay] = useState(false);
 
   const detailRef = useRef(null);
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setBmiValue({
-      ...bmiValue,
-      [name]: value,
-    });
+  const [form] = Form.useForm();
+
+  const handleUnitChange = (e) => {
+    setSelectedUnit(e.target.value);
   };
 
-  const calculateBMI = () => {
+  const calculateBMI = (values) => {
+    const { height, heightFt, heightIn, weight, unit } = values;
+    console.log(values);
+
     setBmiDisplay(true);
 
     let calculatedBmi;
 
-    if (bmiValue.unit === "metric") {
-      calculatedBmi = bmiValue.weight / Math.pow(bmiValue.height / 100, 2);
+    if (unit === "metric") {
+      calculatedBmi = weight / Math.pow(height / 100, 2);
     } else {
-      calculatedBmi = (bmiValue.weight / Math.pow(bmiValue.height, 2)) * 703;
+      // const weightInKg = weight / 2.20462;
+      const totalHeightInInches = heightFt * 12 + heightIn;
+      calculatedBmi = (weight / Math.pow(totalHeightInInches, 2)) * 703;
     }
 
     setBmi(calculatedBmi.toFixed(1));
     setBmiCategory(getBmiCategory(calculatedBmi));
-    detailRef?.current.scrollIntoView({
+    detailRef?.current?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",
       inline: "start",
@@ -49,21 +46,19 @@ function App() {
 
   const getBmiCategory = (bmi) => {
     if (bmi < 18.5) {
-      return "Underweight";
+      return "underweight";
     } else if (bmi >= 18.5 && bmi <= 24.9) {
-      return "Normal";
+      return "normal";
     } else if (bmi >= 25 && bmi <= 29.9) {
-      return "Overweight";
+      return "overweight";
     } else if (bmi >= 30 && bmi <= 34.9) {
-      return "Obesity Class I";
+      return "obesityClass1";
     } else if (bmi >= 35 && bmi <= 39.9) {
-      return "Obesity Class II";
+      return "obesityClass2";
     } else {
-      return "Obesity Class III";
+      return "obesityClass3";
     }
   };
-
-  console.log(bmiValue);
 
   return (
     <div>
@@ -72,85 +67,163 @@ function App() {
           <article className="dashboard">
             <div className="user">
               <Avatar
-                size={{ xs: 40, sm: 40, md: 40, lg: 64, xl: 80, xxl: 100 }}
+                size={{ xs: 64, sm: 64, md: 64, lg: 64, xl: 80, xxl: 100 }}
                 icon={<UserOutlined />}
               />
             </div>
-            <form onSubmit={(e) => e.preventDefault()}>
+
+            <Form
+              form={form}
+              layout="vertical"
+              style={{
+                width: "100%",
+              }}
+              onFinish={calculateBMI}
+              initialValues={{
+                gender: "male",
+                unit: "metric",
+                age: "",
+                height: "",
+                heightFt: "",
+                heightIn: "",
+                weight: "",
+              }}
+            >
               <div className="details">
                 <div className="peakmetric_unit">
-                  <p className="gender">Units</p>
-                  <Radio.Group
-                    onChange={onChange}
-                    defaultValue={bmiValue.unit}
-                    buttonStyle="solid"
-                    name="unit"
-                  >
-                    <Radio.Button value="metric">Metric (cm, kg)</Radio.Button>
-                    <Radio.Button value="imperial">
-                      Imperial (in, lbs)
-                    </Radio.Button>
-                  </Radio.Group>
+                  <Form.Item name="unit">
+                    <Radio.Group
+                      defaultValue="metric"
+                      onChange={handleUnitChange}
+                      buttonStyle="solid"
+                    >
+                      <Radio.Button value="metric">
+                        Metric (cm, kg)
+                      </Radio.Button>
+                      <Radio.Button value="imperial">
+                        Imperial (in, lbs)
+                      </Radio.Button>
+                    </Radio.Group>
+                  </Form.Item>
                 </div>
-                <div>
-                  <p className="gender">Gender</p>
-                  <Radio.Group
-                    onChange={onChange}
-                    defaultValue={bmiValue.gender}
-                    name="gender"
-                    buttonStyle="solid"
-                  >
+                <Form.Item name="gender">
+                  <Radio.Group defaultValue="male" buttonStyle="solid">
                     <Radio.Button value="male">Male</Radio.Button>
                     <Radio.Button value="female">Female</Radio.Button>
                   </Radio.Group>
-                </div>
-                <Input
-                  name="name"
-                  placeholder="Enter your Name"
-                  value={bmiValue.name}
-                  onChange={onChange}
-                />
-                <InputNumber
-                  min={1}
-                  max={120}
-                  defaultValue={bmiValue.age}
-                  addonAfter="years"
-                  placeholder="How old are you?"
-                  // onChange={onChange}
-                />
-                <Input
-                  min={1}
-                  max={120}
-                  defaultValue={bmiValue.height}
-                  addonAfter={bmiValue.unit === "metric" ? "cm" : "in"}
-                  placeholder="Height*"
-                  name="height"
-                  onChange={onChange}
-                />
-                <Input
-                  min={1}
-                  max={120}
-                  defaultValue={bmiValue.weight}
-                  addonAfter={bmiValue.unit === "metric" ? "kg" : "lbs"}
-                  placeholder="Weight*"
-                  name="weight"
-                  onChange={onChange}
-                />
+                </Form.Item>
+                <Form.Item name="age">
+                  <InputNumber
+                    min={1}
+                    max={120}
+                    addonAfter="years"
+                    placeholder="How old are you?"
+                  />
+                </Form.Item>
 
-                {/* <InputNumber
-                name="age"
-                placeholder="How old are you?"
-                value={bmiValue.age}
-                onChange={onChange}
-              /> */}
+                {selectedUnit === "metric" ? (
+                  <Form.Item name="height">
+                    <InputNumber
+                      min={0}
+                      addonAfter="cm"
+                      placeholder="Height*"
+                    />
+                  </Form.Item>
+                ) : (
+                  <>
+                    <Form.Item name="heightFt">
+                      <InputNumber
+                        min={0}
+                        addonAfter="ft"
+                        placeholder="Height (ft)*"
+                      />
+                    </Form.Item>
 
-                <Button type="primary" onClick={calculateBMI}>
+                    <Form.Item name="heightIn">
+                      <InputNumber
+                        min={0}
+                        max={11}
+                        addonAfter="in"
+                        placeholder="Height (in)*"
+                      />
+                    </Form.Item>
+                  </>
+                )}
+
+                <Form.Item name="weight">
+                  <InputNumber
+                    min={0}
+                    addonAfter={selectedUnit === "metric" ? "kg" : "lbs"}
+                    placeholder="Weight*"
+                  />
+                </Form.Item>
+                <Button type="primary" htmlType="submit">
                   Calculate
                 </Button>
               </div>
-            </form>
+            </Form>
           </article>
-          <article className="peakmetric_main"></article>
+          <article className="peakmetric_main">
+            <section className="peakmetric_desktop_details">
+              <article className="peakmetric_desktop_units">
+                <Form>
+                  <Form.Item name="unit">
+                    <Radio.Group
+                      defaultValue="metric"
+                      onChange={handleUnitChange}
+                      buttonStyle="solid"
+                    >
+                      <Radio.Button value="metric">
+                        Metric (cm, kg)
+                      </Radio.Button>
+                      <Radio.Button value="imperial">
+                        Imperial (in, lbs)
+                      </Radio.Button>
+                    </Radio.Group>
+                  </Form.Item>
+                </Form>
+              </article>
+              {bmiDisplay && (
+                <>
+                  <ReactSpeedometer
+                    width={500}
+                    needleHeightRatio={0.7}
+                    maxValue={50}
+                    value={parseFloat(bmi)}
+                    segments={5}
+                    ringWidth={47}
+                    customSegmentStops={[0, 18.5, 24.9, 29.9, 34.9, 39.9, 50]}
+                    segmentColors={[
+                      "#81C784", // Underweight
+                      "#4CAF50", // Normal
+                      "#FFA726", // Overweight
+                      "#FF7043", // Obese Class I
+                      "#F44336", // Obese Class II
+                      "#B71C1C", // Obese Class III
+                    ]}
+                    needleTransitionDuration={3333}
+                    needleTransition="easeElastic"
+                    currentValueText={`Your BMI is ${bmi} => ${
+                      bmiCategory === "underweight"
+                        ? "Underweight"
+                        : bmiCategory === "normal"
+                        ? "Normal"
+                        : bmiCategory === "overweight"
+                        ? "Overweight"
+                        : bmiCategory === "obesityClass1"
+                        ? "Obesity Class I (Moderate)"
+                        : bmiCategory === "obesityClass2"
+                        ? "Obesity Class II (Severe)"
+                        : bmiCategory === "obesityClass3"
+                        ? "Obesity Class III (Very severe or morbidly obese)"
+                        : ""
+                    }`}
+                  />
+                  <ColorMeasures />
+                </>
+              )}
+            </section>
+          </article>
         </div>
       </section>
       <section className="circle1"></section>
@@ -158,8 +231,40 @@ function App() {
 
       {bmiDisplay && (
         <section ref={detailRef} className="peakmetric_mobile_details">
-          <ColorSlider bmiCategory={bmiCategory} />
-          {bmi} {bmiCategory}
+          <ReactSpeedometer
+            needleHeightRatio={0.7}
+            maxValue={50}
+            value={parseFloat(bmi)}
+            segments={5}
+            ringWidth={47}
+            customSegmentStops={[0, 18.5, 24.9, 29.9, 34.9, 39.9, 50]}
+            segmentColors={[
+              "#81C784", // Underweight
+              "#4CAF50", // Normal
+              "#FFA726", // Overweight
+              "#FF7043", // Obese Class I
+              "#F44336", // Obese Class II
+              "#B71C1C", // Obese Class III
+            ]}
+            needleTransitionDuration={3333}
+            needleTransition="easeElastic"
+            currentValueText={`Your BMI is ${bmi} => ${
+              bmiCategory === "underweight"
+                ? "Underweight"
+                : bmiCategory === "normal"
+                ? "Normal"
+                : bmiCategory === "overweight"
+                ? "Overweight"
+                : bmiCategory === "obesityClass1"
+                ? "Obesity Class I (Moderate)"
+                : bmiCategory === "obesityClass2"
+                ? "Obesity Class II (Severe)"
+                : bmiCategory === "obesityClass3"
+                ? "Obesity Class III (Very severe or morbidly obese)"
+                : ""
+            }`}
+          />
+          <ColorMeasures />
         </section>
       )}
     </div>
