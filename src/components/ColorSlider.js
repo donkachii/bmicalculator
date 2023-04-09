@@ -10,7 +10,7 @@ const ColorSlider = ({ bmiCategory }) => {
     obesityClass3: 100,
   };
   const sliderValue = bmiCategory ? bmiCategoryValues[bmiCategory] : 0;
-
+  console.log(bmiCategory, bmiCategoryValues[bmiCategory]);
   return (
     <div>
       <input
