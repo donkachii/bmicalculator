@@ -112,7 +112,12 @@ function App() {
                     <Radio.Button value="female">Female</Radio.Button>
                   </Radio.Group>
                 </Form.Item>
-                <Form.Item name="age">
+                <Form.Item
+                  name="age"
+                  rules={[
+                    { required: true, message: "Please input your age!" },
+                  ]}
+                >
                   <InputNumber
                     min={1}
                     max={120}
@@ -122,7 +127,12 @@ function App() {
                 </Form.Item>
 
                 {selectedUnit === "metric" ? (
-                  <Form.Item name="height">
+                  <Form.Item
+                    name="height"
+                    rules={[
+                      { required: true, message: "Please input your height!" },
+                    ]}
+                  >
                     <InputNumber
                       min={0}
                       addonAfter="cm"
@@ -131,7 +141,15 @@ function App() {
                   </Form.Item>
                 ) : (
                   <>
-                    <Form.Item name="heightFt">
+                    <Form.Item
+                      name="heightFt"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input your height in feets!",
+                        },
+                      ]}
+                    >
                       <InputNumber
                         min={0}
                         addonAfter="ft"
@@ -139,7 +157,15 @@ function App() {
                       />
                     </Form.Item>
 
-                    <Form.Item name="heightIn">
+                    <Form.Item
+                      name="heightIn"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please input your height in inches!",
+                        },
+                      ]}
+                    >
                       <InputNumber
                         min={0}
                         max={11}
@@ -150,7 +176,12 @@ function App() {
                   </>
                 )}
 
-                <Form.Item name="weight">
+                <Form.Item
+                  name="weight"
+                  rules={[
+                    { required: true, message: "Please input your weight!" },
+                  ]}
+                >
                   <InputNumber
                     min={0}
                     addonAfter={selectedUnit === "metric" ? "kg" : "lbs"}
